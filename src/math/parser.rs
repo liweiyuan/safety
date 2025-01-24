@@ -8,11 +8,11 @@ impl Parser {
         Self::parse_expr(tokens)
     }
 
-    pub fn parse_expr(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
+    fn parse_expr(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
         Self::parse_add_sub(tokens)
     }
 
-    pub fn parse_add_sub(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
+    fn parse_add_sub(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
         let mut left = Self::parse_mul_div(tokens)?;
 
         while let Some(token) = tokens.front() {
@@ -36,7 +36,7 @@ impl Parser {
         Ok(left)
     }
 
-    pub fn parse_mul_div(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
+    fn parse_mul_div(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
         let mut left = Self::parse_primary(tokens)?;
 
         while let Some(token) = tokens.front() {
@@ -60,7 +60,7 @@ impl Parser {
         Ok(left)
     }
 
-    pub fn parse_primary(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
+    fn parse_primary(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
         match tokens.pop_front() {
             Some(Token::Number(n)) => Ok(Expr::Number(n)),
             Some(Token::LeftParen) => {
