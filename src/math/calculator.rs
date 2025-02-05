@@ -44,11 +44,20 @@ pub enum Expr {
 }
 
 pub fn calculate(expr: &str) -> Result<f64> {
-    let mut tokens =
+    //第一种方式
+    /* let mut tokens =
         Tokenizer::tokenize(expr).map_err(|e| anyhow!("Failed to parse expression: {}", e))?;
     let ast =
         Parser::parse(&mut tokens).map_err(|e| anyhow!("Failed to parse expression: {}", e))?;
-    eval(&ast).map_err(|e| anyhow!("Failed to evaluate expression: {}", e))
+    eval(&ast).map_err(|e| anyhow!("Failed to evaluate expression: {}", e)) */
+
+    //第二种方式
+    Tokenizer::tokenize(expr)
+        .map_err(|e| anyhow!("Failed to parse expression: {}", e))
+        .and_then(|mut tokens| {
+            Parser::parse(&mut tokens).map_err(|e| anyhow!("Failed to parse expression: {}", e))
+        })
+        .and_then(|ast| eval(&ast).map_err(|e| anyhow!("Failed to evaluate expression: {}", e)))
 }
 
 fn eval(expr: &Expr) -> Result<f64, CalcError> {
@@ -63,17 +72,19 @@ fn eval(expr: &Expr) -> Result<f64, CalcError> {
             }
         }
         Expr::BinaryOp { op, left, right } => {
-            let (left_val, right_val) = (eval(left)?, eval(right)?);
-            match op {
-                '+' => Ok(left_val + right_val),
-                '-' => Ok(left_val - right_val),
-                '*' => Ok(left_val * right_val),
-                '/' if right_val == 0.0 => {
-                    Err(CalcError::DivisionByZero("Division by zero".to_string()))
-                }
-                '/' => Ok(left_val / right_val),
-                _ => Err(CalcError::EvalError(format!("Invalid operator: {}", op))),
-            }
+            //let (left_val, right_val) = (eval(left)?, eval(right)?);
+            eval(left).and_then(|left_val| {
+                eval(right).and_then(|right_val| match op {
+                    '+' => Ok(left_val + right_val),
+                    '-' => Ok(left_val - right_val),
+                    '*' => Ok(left_val * right_val),
+                    '/' if right_val == 0.0 => {
+                        Err(CalcError::DivisionByZero("Division by zero".to_string()))
+                    }
+                    '/' => Ok(left_val / right_val),
+                    _ => Err(CalcError::EvalError(format!("Invalid operator: {}", op))),
+                })
+            })
         }
     }
 }
@@ -141,7 +152,7 @@ mod tests {
         if let Err(e) = result {
             assert_eq!(
                 e.to_string(),
-                "Failed to parse expression: Parser error: Expected closing parenthesis"
+                "Failed to parse expression: Parser error: Unexpected end of input"
             );
         } else {
             panic!("Expected an error, but got a result: {:?}", result);

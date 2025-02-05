@@ -9,7 +9,8 @@ impl Parser {
     }
 
     fn parse_expr(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
-        Self::parse_add_sub(tokens)
+        let result = Self::parse_add_sub(tokens)?;
+        Ok(result)
     }
 
     fn parse_add_sub(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
@@ -62,31 +63,25 @@ impl Parser {
 
     fn parse_primary(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
         match tokens.pop_front() {
-            //处理一元运算符
-            Some(Token::Plus) => {
-                let operand = Self::parse_primary(tokens)?;
-                Ok(Expr::UnaryOp {
-                    op: '+',
-                    operand: Box::new(operand),
-                })
-            }
-            Some(Token::Minus) => {
-                let operand = Self::parse_primary(tokens)?;
-                Ok(Expr::UnaryOp {
-                    op: '-',
-                    operand: Box::new(operand),
-                })
-            }
-            //处理数字与括号表达式
+            Some(Token::Plus) => Ok(Expr::UnaryOp {
+                op: '+',
+                operand: Box::new(Self::parse_primary(tokens)?),
+            }),
+            Some(Token::Minus) => Ok(Expr::UnaryOp {
+                op: '-',
+                operand: Box::new(Self::parse_primary(tokens)?),
+            }),
             Some(Token::Number(n)) => Ok(Expr::Number(n)),
             Some(Token::LeftParen) => {
                 let expr = Self::parse_expr(tokens)?;
                 match tokens.pop_front() {
                     Some(Token::RightParen) => Ok(expr),
-                    _ => Err(CalcError::ParserError("Expected closing parenthesis")),
+                    Some(_) => Err(CalcError::ParserError("Expected closing parenthesis")),
+                    None => Err(CalcError::ParserError("Unexpected end of input")),
                 }
             }
-            _ => Err(CalcError::ParserError("Expected number or parenthesis")),
+            Some(_) => Err(CalcError::ParserError("Expected number or parenthesis")),
+            None => Err(CalcError::ParserError("Unexpected end of input")),
         }
     }
 }
