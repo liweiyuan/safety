@@ -67,10 +67,10 @@ impl Parser {
                 let expr = Self::parse_expr(tokens)?;
                 match tokens.pop_front() {
                     Some(Token::RightParen) => Ok(expr),
-                    _ => Err(CalcError::PaserError("Expected closing parenthesis")),
+                    _ => Err(CalcError::ParserError("Expected closing parenthesis")),
                 }
             }
-            _ => Err(CalcError::PaserError("Expected number or parenthesis")),
+            _ => Err(CalcError::ParserError("Expected number or parenthesis")),
         }
     }
 }

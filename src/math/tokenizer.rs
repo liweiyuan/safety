@@ -22,7 +22,7 @@ impl Tokenizer {
                     }
                     let num = num_str
                         .parse::<f64>()
-                        .map_err(|_| CalcError::PaserError("Failed to parse number"))?;
+                        .map_err(|_| CalcError::ParserError("Failed to parse number"))?;
                     tokens.push_back(Token::Number(num));
                 }
                 '+' => {

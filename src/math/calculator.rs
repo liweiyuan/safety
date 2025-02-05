@@ -12,7 +12,7 @@ pub enum CalcError {
     DivisionByZero(String),
 
     #[error("Parser error: {0}")]
-    PaserError(&'static str),
+    ParserError(&'static str),
 
     #[error("Evaluating error: {0}")]
     EvalError(String),
@@ -51,20 +51,16 @@ fn eval(expr: &Expr) -> Result<f64, CalcError> {
     match expr {
         Expr::Number(n) => Ok(*n),
         Expr::BinaryOp { op, left, right } => {
-            let left_val = eval(left)?;
-            let right_val = eval(right)?;
+            let (left_val, right_val) = (eval(left)?, eval(right)?);
             match op {
                 '+' => Ok(left_val + right_val),
                 '-' => Ok(left_val - right_val),
                 '*' => Ok(left_val * right_val),
-                '/' => {
-                    if right_val == 0.0 {
-                        Err(CalcError::DivisionByZero("Division by zero".to_string()))
-                    } else {
-                        Ok(left_val / right_val)
-                    }
+                '/' if right_val == 0.0 => {
+                    Err(CalcError::DivisionByZero("Division by zero".to_string()))
                 }
-                _ => Err(CalcError::EvalError("Invalid operator".to_string())),
+                '/' => Ok(left_val / right_val),
+                _ => Err(CalcError::EvalError(format!("Invalid operator: {}", op))),
             }
         }
     }
