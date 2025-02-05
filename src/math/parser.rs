@@ -62,6 +62,22 @@ impl Parser {
 
     fn parse_primary(tokens: &mut VecDeque<Token>) -> Result<Expr, CalcError> {
         match tokens.pop_front() {
+            //处理一元运算符
+            Some(Token::Plus) => {
+                let operand = Self::parse_primary(tokens)?;
+                Ok(Expr::UnaryOp {
+                    op: '+',
+                    operand: Box::new(operand),
+                })
+            }
+            Some(Token::Minus) => {
+                let operand = Self::parse_primary(tokens)?;
+                Ok(Expr::UnaryOp {
+                    op: '-',
+                    operand: Box::new(operand),
+                })
+            }
+            //处理数字与括号表达式
             Some(Token::Number(n)) => Ok(Expr::Number(n)),
             Some(Token::LeftParen) => {
                 let expr = Self::parse_expr(tokens)?;

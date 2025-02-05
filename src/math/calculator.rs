@@ -37,6 +37,10 @@ pub enum Expr {
         left: Box<Expr>,
         right: Box<Expr>,
     },
+    UnaryOp {
+        op: char,
+        operand: Box<Expr>,
+    },
 }
 
 pub fn calculate(expr: &str) -> Result<f64> {
@@ -50,6 +54,14 @@ pub fn calculate(expr: &str) -> Result<f64> {
 fn eval(expr: &Expr) -> Result<f64, CalcError> {
     match expr {
         Expr::Number(n) => Ok(*n),
+        Expr::UnaryOp { op, operand } => {
+            let val = eval(operand)?;
+            match op {
+                '+' => Ok(val),  //一元加法
+                '-' => Ok(-val), //一元减法
+                _ => Err(CalcError::EvalError(format!("Invalid operator: {}", op))),
+            }
+        }
         Expr::BinaryOp { op, left, right } => {
             let (left_val, right_val) = (eval(left)?, eval(right)?);
             match op {
@@ -139,5 +151,26 @@ mod tests {
     #[test]
     fn test_add() {
         assert_eq!(calculate("10 + 10").unwrap(), 20.0)
+    }
+
+    #[test]
+    fn test_unary_minus() {
+        assert_eq!(calculate("-10").unwrap(), -10.0);
+    }
+    #[test]
+    fn test_unary_plus() {
+        assert_eq!(calculate("+10").unwrap(), 10.0);
+    }
+
+    #[test]
+    fn test_unary_with_binary() {
+        assert_eq!(calculate("-2 * 3").unwrap(), -6.0);
+        assert_eq!(calculate("-(2 + 3)").unwrap(), -5.0);
+    }
+
+    #[test]
+    fn test_multiple_unary() {
+        assert_eq!(calculate("--10").unwrap(), 10.0);
+        assert_eq!(calculate("+-10").unwrap(), -10.0);
     }
 }
